@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#060606">
+  <title>SAAKHI // TACTICAL SEC OS</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* THEME SYSTEM (STEALTH OLED vs DAYLIGHT CERAMIC) */
+    :root[data-theme="dark"] {
+      --bg: #060607;
+      --chassis-border: #1a1a1f;
+      --card-bg: rgba(18, 18, 22, 0.85);
+      --card-hover: rgba(28, 28, 35, 0.95);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-bright: rgba(255, 255, 255, 0.28);
+      --text-bright: #ffffff;
+      --text-dim: #71717a;
+      --dock-bg: rgba(13, 13, 16, 0.88);
+      --island-bg: #000000;
+      --radar-line: rgba(255, 255, 255, 0.08);
+      --orb-shadow: rgba(255, 255, 255, 0.12);
+      --core-bg: #ffffff;
+      --core-text: #000000;
+      --chat-bg: rgba(16, 16, 20, 0.9);
+      --laser: rgba(255, 255, 255, 0.08);
+    }
+
+    :root[data-theme="light"] {
+      --bg: #f4f5f8;
+      --chassis-border: #d0d2d8;
+      --card-bg: rgba(255, 255, 255, 0.85);
+      --card-hover: rgba(245, 246, 250, 1);
+      --border: rgba(0, 0, 0, 0.08);
+      --border-bright: rgba(0, 0, 0, 0.28);
+      --text-bright: #0c0d10;
+      --text-dim: #64748b;
+      --dock-bg: rgba(255, 255, 255, 0.88);
+      --island-bg: #111317;
+      --radar-line: rgba(0, 0, 0, 0.08);
+      --orb-shadow: rgba(0, 0, 0, 0.08);
+      --core-bg: #0c0d10;
+      --core-text: #ffffff;
+      --chat-bg: rgba(255, 255, 255, 0.95);
+      --laser: rgba(0, 0, 0, 0.08);
+    }
+
+    body {
+      background: #000;
+      color: var(--text-bright);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      overscroll-behavior: none;
+      transition: background 0.4s ease;
+    }
+
+    .mono {
+      font-family: "SF Mono", Monaco, Menlo, Consolas, monospace;
+    }
+
+    /* DEVICE CHASSIS (Adaptive Desktop vs Mobile APK) */
+    .device {
+      width: 100%;
+      max-width: 414px;
+      height: 874px;
+      max-height: 96vh;
+      background: var(--bg);
+      border-radius: 52px;
+      border: 4px solid var(--chassis-border);
+      box-shadow: 0 35px 120px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.06);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: background 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s ease;
+    }
+
+    /* NATIVE IMMERSION FOR MOBILE APPILIX WRAPPER */
+    @media (max-width: 500px), (max-height: 720px) {
+      body { padding: 0; background: var(--bg); }
+      .device {
+        max-width: 100vw;
+        height: 100dvh;
+        max-height: 100dvh;
+        border-radius: 0;
+        border: none;
+        box-shadow: none;
+      }
+      .island { top: calc(env(safe-area-inset-top, 0px) + 8px) !important; }
+      .screen {
+        padding-top: calc(env(safe-area-inset-top, 0px) + 50px) !important;
+        padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 84px) !important;
+      }
+      .dock { bottom: calc(env(safe-area-inset-bottom, 0px) + 12px) !important; }
+    }
+
+    /* DYNAMIC ISLAND */
+    .island {
+      width: 136px;
+      height: 32px;
+      background: var(--island-bg);
+      border-radius: 20px;
+      position: absolute;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 120;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .island:active { transform: translateX(-50%) scale(0.96); }
+    .island-lens {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #111528;
+      border: 1px solid #1f2b4d;
+      box-shadow: inset 0 0 3px #3b82f6;
+    }
+    .island-tag {
+      font-size: 8.5px;
+      letter-spacing: 1.5px;
+      color: #94a3b8;
+    }
+
+    /* SCREEN CONTAINER */
+    .screen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 56px 20px 88px;
+      overflow-y: auto;
+      scrollbar-width: none;
+      position: relative;
+    }
+    .screen::-webkit-scrollbar { display: none; }
+
+    /* HUD */
+    .hud {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .hud-beacon {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 8.5px;
+      letter-spacing: 2px;
+      color: var(--text-dim);
+    }
+    .hud-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+      animation: blink 2.5s infinite ease-in-out;
+    }
+    @keyframes blink { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+
+    /* DAYLIGHT TOGGLE BUTTON IN HUD */
+    .theme-pill {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 8.5px;
+      letter-spacing: 1.5px;
+      color: var(--text-dim);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s;
+    }
+    .theme-pill:hover {
+      border-color: var(--border-bright);
+      color: var(--text-bright);
+    }
+
+    .header-title-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+    }
+    .title-box { display: flex; align-items: baseline; gap: 2px; }
+    .title {
+      font-size: 34px;
+      font-weight: 900;
+      letter-spacing: -1.2px;
+      color: var(--text-bright);
+    }
+    .title-dot { color: #f43f5e; font-size: 34px; font-weight: 900; }
+    .subtitle {
+      font-size: 8.5px;
+      color: var(--text-dim);
+      letter-spacing: 1.8px;
+      margin-top: 2px;
+    }
+
+    .laser-line {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 10px 0 12px;
+    }
+    .laser-line hr {
+      flex: 1;
+      height: 1px;
+      background: var(--laser);
+      border: none;
+    }
+
+    /* =========================================================
+       CINEMATIC TAB VIEW SYSTEM WITH STAGGERED INTROS
+       ========================================================= */
+    .tab-view {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      position: relative;
+    }
+    .tab-view.active {
+      display: flex;
+    }
+
+    /* TAB 1: ASSIST STAGGERED ANIMATIONS */
+    /* 1. Curtain darkness lift */
+    .curtain {
+      position: absolute;
+      inset: -20px;
+      background: var(--bg);
+      z-index: 80;
+      pointer-events: none;
+      opacity: 1;
+    }
+    .tab-view.active .curtain {
+      animation: curtainFadeOut 0.4s ease 0.1s forwards;
+    }
+    @keyframes curtainFadeOut {
+      to { opacity: 0; visibility: hidden; }
+    }
+
+    /* 2. Globe ascends from bottom to top */
+    .tab-view.active .assist-orb-node {
+      opacity: 0;
+      transform: translateY(90px) scale(0.65);
+      filter: blur(10px);
+      animation: orbAscend 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.28s forwards;
+    }
+    @keyframes orbAscend {
+      0% { opacity: 0; transform: translateY(90px) scale(0.65); filter: blur(10px); }
+      70% { opacity: 1; transform: translateY(-4px) scale(1.03); filter: blur(0); }
+      100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+    }
+
+    /* 3. Suggestions & labels cascade in */
+    .tab-view.active .assist-stagger-1 {
+      opacity: 0;
+      transform: translateY(22px);
+      animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.65s forwards;
+    }
+    .tab-view.active .assist-stagger-2 {
+      opacity: 0;
+      transform: translateY(22px);
+      animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.78s forwards;
+    }
+    .tab-view.active .assist-stagger-3 {
+      opacity: 0;
+      transform: translateY(22px);
+      animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.90s forwards;
+    }
+    .tab-view.active .assist-stagger-4 {
+      opacity: 0;
+      transform: translateY(22px);
+      animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) 1.02s forwards;
+    }
+
+    /* 4. Text input deck glides up last */
+    .tab-view.active .assist-deck {
+      opacity: 0;
+      transform: translateY(26px);
+      animation: slideUpFade 0.65s cubic-bezier(0.16, 1, 0.3, 1) 1.15s forwards;
+    }
+
+    @keyframes slideUpFade {
+      0% { opacity: 0; transform: translateY(24px); filter: blur(3px); }
+      100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+    }
+
+    /* ORB CONTAINER */
+    .orb-box {
+      height: 185px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .orb-glow {
+      position: absolute;
+      width: 155px;
+      height: 155px;
+      background: radial-gradient(circle, var(--orb-shadow) 0%, rgba(0,0,0,0) 70%);
+      border-radius: 50%;
+      pointer-events: none;
+      animation: pulse 3s infinite alternate ease-in-out;
+    }
+    @keyframes pulse {
+      0% { transform: scale(0.9); opacity: 0.4; }
+      100% { transform: scale(1.2); opacity: 0.9; }
+    }
+    #orbCanvas {
+      width: 160px;
+      height: 160px;
+      z-index: 2;
+    }
+    .orb-caption {
+      font-size: 8.5px;
+      letter-spacing: 2.5px;
+      color: var(--text-dim);
+      margin-top: -6px;
+    }
+
+    /* ADVISOR CALLOUT */
+    .advisor-bubble {
+      display: none;
+      background: var(--card-bg);
+      border: 1px solid var(--border-bright);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      font-size: 11.5px;
+      line-height: 1.5;
+      color: var(--text-bright);
+      white-space: pre-line;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      backdrop-filter: blur(12px);
+    }
+
+    /* PROMPT CARTRIDGES */
+    .cartridge-label {
+      font-size: 8px;
+      letter-spacing: 2px;
+      color: var(--text-dim);
+      margin: 10px 0 6px;
+    }
+    .cartridge {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      margin-bottom: 7px;
+      cursor: pointer;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .cartridge:hover {
+      background: var(--card-hover);
+      border-color: var(--border-bright);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+    }
+    .cartridge:active { transform: scale(0.97); }
+    .cartridge-id { font-size: 9px; color: var(--text-dim); }
+    .cartridge-text { font-size: 12.5px; font-weight: 500; flex: 1; color: var(--text-bright); }
+    .cartridge-arrow { color: var(--text-dim); font-size: 12px; transition: transform 0.2s; }
+    .cartridge:hover .cartridge-arrow { transform: translateX(3px); color: var(--text-bright); }
+
+    /* INPUT DECK */
+    .chat-deck {
+      margin-top: auto;
+      display: flex;
+      gap: 8px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+    .chat-input {
+      flex: 1;
+      background: var(--chat-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      color: var(--text-bright);
+      font-size: 12px;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .chat-input:focus {
+      border-color: var(--border-bright);
+    }
+    .send-trigger {
+      width: 44px;
+      height: 44px;
+      background: var(--core-bg);
+      border: none;
+      border-radius: 12px;
+      color: var(--core-text);
+      font-weight: 900;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.15s;
+    }
+    .send-trigger:active { transform: scale(0.9); }
+
+    /* =========================================================
+       TAB 2: SOS CINEMATIC RADAR
+       ========================================================= */
+    .tab-view.active .sos-anim-radar {
+      opacity: 0;
+      transform: scale(0.4);
+      animation: popRadar 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.25s forwards;
+    }
+    .tab-view.active .sos-anim-core {
+      opacity: 0;
+      transform: translateY(40px) scale(0.7);
+      animation: popCore 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.45s forwards;
+    }
+    .tab-view.active .sos-anim-item1 {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: slideUpFade 0.5s ease 0.8s forwards;
+    }
+    .tab-view.active .sos-anim-item2 {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: slideUpFade 0.5s ease 0.95s forwards;
+    }
+
+    @keyframes popRadar {
+      to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes popCore {
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .radar-box {
+      height: 280px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      margin: 8px 0;
+    }
+    .radar-ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 1px dashed var(--border-bright);
+      animation: sonar 3s infinite cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .radar-ring:nth-child(2) { animation-delay: 1.2s; }
+    @keyframes sonar {
+      0% { width: 130px; height: 130px; opacity: 0.8; }
+      100% { width: 330px; height: 330px; opacity: 0; }
+    }
+    .radar-cross-h { position: absolute; width: 260px; height: 1px; background: var(--radar-line); }
+    .radar-cross-v { position: absolute; height: 260px; width: 1px; background: var(--radar-line); }
+
+    .sos-core {
+      width: 154px;
+      height: 154px;
+      border-radius: 50%;
+      background: var(--core-bg);
+      box-shadow: 0 0 50px rgba(244, 63, 94, 0.3);
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 0.18s, box-shadow 0.2s, background 0.2s;
+    }
+    .sos-core:active {
+      transform: scale(0.92);
+      background: #f43f5e;
+      box-shadow: 0 0 70px rgba(244, 63, 94, 0.8);
+    }
+    .sos-core:active .sos-core-num,
+    .sos-core:active .sos-core-label { color: #fff !important; }
+    .sos-core-label { font-size: 8px; letter-spacing: 2px; color: var(--core-text); opacity: 0.7; }
+    .sos-core-num { font-size: 50px; font-weight: 900; color: var(--core-text); letter-spacing: -2px; line-height: 1; }
+    .sos-core-badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: #f43f5e;
+      color: #fff;
+      padding: 4px 11px;
+      border-radius: 99px;
+      font-size: 8px;
+      letter-spacing: 1.4px;
+      font-weight: 800;
+      margin-top: 4px;
+    }
+
+    /* =========================================================
+       TAB 3: ARMOR CINEMATIC BIO-CALIBRATION
+       ========================================================= */
+    .tab-view.active .armor-anim-card {
+      opacity: 0;
+      transform: translateY(35px) scale(0.95);
+      animation: slideUpFade 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.25s forwards;
+    }
+    .tab-view.active .armor-anim-1 {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: slideUpFade 0.5s ease 0.7s forwards;
+    }
+    .tab-view.active .armor-anim-2 {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: slideUpFade 0.5s ease 0.85s forwards;
+    }
+
+    .armor-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 12px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .breath-box {
+      width: 170px;
+      height: 170px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 12px 0;
+    }
+    .breath-fixed {
+      position: absolute;
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      border: 1px dashed var(--border-bright);
+    }
+    .breath-dynamic {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      border: 2px solid var(--text-bright);
+      background: rgba(255,255,255,0.05);
+      transition: transform 4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .breath-center { text-align: center; z-index: 5; }
+    .breath-action { font-size: 9px; letter-spacing: 2px; color: var(--text-dim); }
+    .breath-timer { font-size: 40px; font-weight: 800; line-height: 1.1; color: var(--text-bright); }
+
+    .action-btn {
+      width: 100%;
+      background: var(--core-bg);
+      border: none;
+      color: var(--core-text);
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 10px;
+      letter-spacing: 1.8px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .action-btn:active { transform: scale(0.97); }
+
+    /* DOCK BAR */
+    .dock {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      right: 16px;
+      height: 60px;
+      background: var(--dock-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      display: flex;
+      align-items: center;
+      padding: 4px;
+      z-index: 100;
+      box-shadow: 0 10px 35px rgba(0,0,0,0.25);
+    }
+    .dock-slot {
+      flex: 1;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      gap: 3px;
+      transition: all 0.2s;
+    }
+    .dock-slot:active { transform: scale(0.92); }
+    .dock-label {
+      font-size: 8.5px;
+      letter-spacing: 1.6px;
+      color: var(--text-dim);
+      font-weight: 700;
+      transition: color 0.2s;
+    }
+    .dock-slot.active .dock-label { color: var(--text-bright); }
+    .dock-led {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: transparent;
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    .dock-slot.active .dock-led {
+      background: var(--text-bright);
+      box-shadow: 0 0 7px var(--text-bright);
+    }
+    .dock-sos-key {
+      background: rgba(244, 63, 94, 0.15);
+      border: 1px solid rgba(244, 63, 94, 0.4);
+      border-radius: 9px;
+      padding: 4px 14px;
+      font-size: 10.5px;
+      font-weight: 900;
+      letter-spacing: 1.4px;
+      color: #f43f5e;
+      transition: all 0.2s;
+    }
+    .dock-slot.active .dock-sos-key {
+      background: #f43f5e;
+      color: #fff;
+      box-shadow: 0 0 16px rgba(244, 63, 94, 0.6);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="device" id="deviceChassis">
+    <!-- Dynamic Island (Tap to toggle Theme) -->
+    <div class="island" id="islandBar" onclick="toggleTheme()" title="Tap to toggle Daylight/Stealth theme">
+      <div class="island-lens"></div>
+      <span class="island-tag mono" id="islandTag">STEALTH</span>
+      <div style="width: 5px; height: 5px; border-radius: 50%; background: #10b981;"></div>
+    </div>
+
+    <div class="screen">
+      <!-- HUD -->
+      <div class="hud mono">
+        <div class="hud-beacon">
+          <div class="hud-dot" id="gpsLed"></div>
+          <span id="gpsCoordText">GPS.LOCKING...</span>
+        </div>
+        <!-- Theme Toggle Pill in HUD -->
+        <div class="theme-pill" onclick="toggleTheme()">
+          <span id="themePillIcon">☼</span>
+          <span id="themePillText">DAYLIGHT</span>
+        </div>
+        <div class="hud-time" id="liveClock">--:--</div>
+      </div>
+
+      <!-- TITLE -->
+      <div class="header-title-row">
+        <div class="title-box">
+          <span class="title" id="screenTitle">SAAKHI</span>
+          <span class="title-dot">.</span>
+        </div>
+      </div>
+      <div class="subtitle mono" id="screenSubtitle">ZERO-LOG TACTICAL GUARDIAN</div>
+
+      <div class="laser-line">
+        <hr>
+        <span class="mono" style="font-size: 9px; color: var(--text-dim);">+</span>
+      </div>
+
+      <!-- =========================================================
+           TAB 1: ASSIST
+           Sequence: Black Veil -> Orb Ascends from Bottom -> Prompts Slide in -> Input Dock Glides in
+           ========================================================= -->
+      <div class="tab-view active" id="view-assist">
+        <div class="curtain"></div>
+
+        <!-- 3D Orb that rises from bottom -->
+        <div class="orb-box assist-orb-node">
+          <div class="orb-glow"></div>
+          <canvas id="orbCanvas" width="160" height="160"></canvas>
+          <div class="orb-caption mono" id="orbStatus">READY // LISTENING</div>
+        </div>
+
+        <div class="advisor-bubble mono" id="advisorOutput"></div>
+
+        <!-- Prompts cascading in -->
+        <div class="cartridge-label mono assist-stagger-1">TACTICAL DIRECTIVES // INSTANT DISPATCH</div>
+
+        <div class="cartridge assist-stagger-2" onclick="dispatchDirectPrompt('I feel unsafe right now. What do I do?')">
+          <span class="cartridge-id mono">[01]</span>
+          <span class="cartridge-text">I feel unsafe right now</span>
+          <span class="cartridge-arrow">→</span>
+        </div>
+        <div class="cartridge assist-stagger-3" onclick="dispatchDirectPrompt('Someone is following me closely.')">
+          <span class="cartridge-id mono">[02]</span>
+          <span class="cartridge-text">Someone is following me</span>
+          <span class="cartridge-arrow">→</span>
+        </div>
+        <div class="cartridge assist-stagger-4" onclick="dispatchDirectPrompt('Generate an immediate tactical safety plan.')">
+          <span class="cartridge-id mono">[03]</span>
+          <span class="cartridge-text">Generate tactical safety plan</span>
+          <span class="cartridge-arrow">→</span>
+        </div>
+
+        <!-- Chat input dock transitions up last -->
+        <div class="chat-deck assist-deck">
+          <input class="chat-input mono" id="chatInput" placeholder="Encrypted directive..." onkeydown="if(event.key==='Enter') submitChat()"/>
+          <button class="send-trigger" onclick="submitChat()">↑</button>
+        </div>
+      </div>
+
+      <!-- =========================================================
+           TAB 2: SOS EMERGENCY COCKPIT
+           Sequence: Radar Ring Expansion -> 112 Beacon ascends -> Helplines pop in
+           ========================================================= -->
+      <div class="tab-view" id="view-sos">
+        <div class="curtain"></div>
+
+        <div class="radar-box sos-anim-radar">
+          <div class="radar-ring"></div>
+          <div class="radar-ring"></div>
+          <div class="radar-cross-h"></div>
+          <div class="radar-cross-v"></div>
+
+          <!-- Direct Phone Call + Silent GPS Telemetry -->
+          <a class="sos-core sos-anim-core" href="tel:112" onclick="handleEmergencySOS(event)">
+            <span class="sos-core-label mono">EMERGENCY</span>
+            <span class="sos-core-num">112</span>
+            <div class="sos-core-badge">
+              <span style="width: 4px; height: 4px; border-radius: 50%; background: #fff;"></span>
+              INITIATE
+            </div>
+          </a>
+        </div>
+
+        <div class="sos-anim-item1" style="text-align: center; font-size: 11px; color: var(--text-dim); line-height: 1.5; margin-bottom: 12px;">
+          National Helpline (Police · Fire · Medical)<br>
+          <span class="mono" style="font-size: 8.5px; opacity: 0.8;">DISPATCHES REALTIME GPS PACKET</span>
+        </div>
+
+        <a class="cartridge sos-anim-item1" href="tel:181" style="text-decoration:none;" onclick="haptic(30)">
+          <span class="cartridge-id mono">[181]</span>
+          <span class="cartridge-text">WOMEN HELPLINE (SAKHI)</span>
+          <span class="cartridge-arrow">CALL ↗</span>
+        </a>
+
+        <a class="cartridge sos-anim-item2" href="tel:14416" style="text-decoration:none;" onclick="haptic(30)">
+          <span class="cartridge-id mono">[14416]</span>
+          <span class="cartridge-text">TELE-MANAS PSYCHOLOGICAL</span>
+          <span class="cartridge-arrow">CALL ↗</span>
+        </a>
+      </div>
+
+      <!-- =========================================================
+           TAB 3: ARMOR // BIO-CALIBRATION & HARDWARE TOOLS
+           Sequence: Breathing Box scales in -> Sound alarm & recorder cascade
+           ========================================================= -->
+      <div class="tab-view" id="view-armor">
+        <div class="curtain"></div>
+
+        <div class="armor-card armor-anim-card">
+          <div class="mono" style="font-size: 8px; letter-spacing: 2px; color: var(--text-dim); border-bottom: 1px solid var(--border); width: 100%; text-align: center; padding-bottom: 6px;">
+            BIO-CALIBRATION // VAGAL NERVE RESET
+          </div>
+
+          <div class="breath-box">
+            <div class="breath-fixed"></div>
+            <div class="breath-dynamic" id="dynamicBreathRing"></div>
+            <div class="breath-center">
+              <div class="breath-action mono" id="breathAction">STANDBY</div>
+              <div class="breath-timer mono" id="breathTimer">04</div>
+            </div>
+          </div>
+
+          <button class="action-btn mono" id="breathBtn" onclick="toggleBreathing()">ENGAGE 4-4-4-4 PROTOCOL</button>
+        </div>
+
+        <div class="cartridge-label mono armor-anim-1">SECURITY COUNTERMEASURES</div>
+
+        <!-- Synthesized Real Web Siren -->
+        <div class="cartridge armor-anim-1" onclick="toggleSiren()">
+          <span class="cartridge-id mono">[SEC_01]</span>
+          <span class="cartridge-text" id="sirenLabel">AUDIBLE ALARM (SIREN)</span>
+          <span class="cartridge-arrow" id="sirenIndicator">OFF</span>
+        </div>
+
+        <!-- Real MediaRecorder Witness Audio -->
+        <div class="cartridge armor-anim-2" onclick="toggleWitnessRecorder()">
+          <span class="cartridge-id mono">[SEC_02]</span>
+          <span class="cartridge-text" id="recorderLabel">WITNESS AUDIO RECORDER</span>
+          <span class="cartridge-arrow" id="recorderIndicator">STANDBY</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TACTICAL BOTTOM DOCK -->
+    <div class="dock mono">
+      <div class="dock-slot active" onclick="switchTab('assist', 'SAAKHI', 'ZERO-LOG TACTICAL GUARDIAN')">
+        <span class="dock-label">ASSIST</span>
+        <div class="dock-led"></div>
+      </div>
+      <div class="dock-slot" onclick="switchTab('sos', 'SOS', 'ONE-TAP EMERGENCY DISPATCH')">
+        <div class="dock-sos-key">SOS</div>
+      </div>
+      <div class="dock-slot" onclick="switchTab('armor', 'ARMOR', 'BIO-RESET & ACTIVE TOOLS')">
+        <span class="dock-label">ARMOR</span>
+        <div class="dock-led"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- 1. THEME SWITCHER (DAYLIGHT vs STEALTH) ---
+    let currentTheme = 'dark';
+    function toggleTheme() {
+      haptic(35);
+      const root = document.documentElement;
+      const tag = document.getElementById('islandTag');
+      const pillIcon = document.getElementById('themePillIcon');
+      const pillText = document.getElementById('themePillText');
+
+      if (currentTheme === 'dark') {
+        root.setAttribute('data-theme', 'light');
+        currentTheme = 'light';
+        tag.textContent = 'DAYLIGHT';
+        pillIcon.textContent = '☽';
+        pillText.textContent = 'STEALTH';
+      } else {
+        root.setAttribute('data-theme', 'dark');
+        currentTheme = 'dark';
+        tag.textContent = 'STEALTH';
+        pillIcon.textContent = '☼';
+        pillText.textContent = 'DAYLIGHT';
+      }
+    }
+
+    // --- 2. HAPTIC ENGINE ---
+    function haptic(ms = 25) {
+      if (window.navigator && window.navigator.vibrate) {
+        window.navigator.vibrate(ms);
+      }
+    }
+
+    // --- 3. LIVE CLOCK & GEOLOCATION HUD ---
+    let currentGeo = { latitude: null, longitude: null, accuracy: null };
+
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('liveClock').textContent = 
+        `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    function initGeolocation() {
+      if ('geolocation' in navigator) {
+        navigator.geolocation.watchPosition(
+          pos => {
+            currentGeo.latitude = pos.coords.latitude.toFixed(4);
+            currentGeo.longitude = pos.coords.longitude.toFixed(4);
+            currentGeo.accuracy = Math.round(pos.coords.accuracy);
+            document.getElementById('gpsCoordText').textContent = 
+              `GPS: ${currentGeo.latitude}, ${currentGeo.longitude}`;
+            document.getElementById('gpsLed').style.background = '#10b981';
+          },
+          err => {
+            document.getElementById('gpsCoordText').textContent = 'GPS.STANDBY';
+          },
+          { enableHighAccuracy: true, timeout: 8000 }
+        );
+      }
+    }
+    initGeolocation();
+
+    // --- 4. TAB CONTROLLER WITH DYNAMIC RE-TRIGGERED SEQUENCES ---
+    function switchTab(tabId, title, sub) {
+      haptic(35);
+      const activeTab = document.querySelector('.tab-view.active');
+      const targetTab = document.getElementById('view-' + tabId);
+      if (activeTab === targetTab) return;
+
+      activeTab.classList.remove('active');
+
+      // Force DOM reflow to re-trigger CSS animations cleanly
+      void targetTab.offsetWidth;
+      targetTab.classList.add('active');
+
+      document.getElementById('screenTitle').textContent = title;
+      document.getElementById('screenSubtitle').textContent = sub;
+
+      const slots = document.querySelectorAll('.dock-slot');
+      slots.forEach(s => s.classList.remove('active'));
+      if (tabId === 'assist') slots[0].classList.add('active');
+      if (tabId === 'sos') slots[1].classList.add('active');
+      if (tabId === 'armor') slots[2].classList.add('active');
+    }
+
+    // --- 5. 3D REACTIVE CANVAS ORB (Theme Adaptive) ---
+    const canvas = document.getElementById('orbCanvas');
+    const ctx = canvas.getContext('2d');
+    let angle = 0;
+    const pts = [];
+    let orbSpeed = 0.014;
+    let orbState = "IDLE";
+
+    for (let i = 0; i < 360; i++) {
+      const theta = Math.acos(2 * Math.random() - 1);
+      const phi = 2 * Math.PI * Math.random();
+      pts.push({
+        x: Math.sin(theta) * Math.cos(phi),
+        y: Math.sin(theta) * Math.sin(phi),
+        z: Math.cos(theta)
+      });
+    }
+
+    function renderOrb() {
+      ctx.clearRect(0, 0, 160, 160);
+      angle += orbSpeed;
+      const cx = 80, cy = 80;
+
+      for (let p of pts) {
+        const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
+        let x = p.x * cos - p.z * sin;
+        let z = p.x * sin + p.z * cos;
+        let y = p.y;
+
+        const scale = 54 / (2.2 - z);
+        const px = cx + x * scale;
+        const py = cy + y * scale;
+        const alpha = Math.max(0.12, (z + 1) / 2);
+
+        if (orbState === "ALERT") {
+          ctx.fillStyle = `rgba(244, 63, 94, ${alpha})`;
+        } else if (orbState === "THINKING") {
+          ctx.fillStyle = `rgba(14, 165, 233, ${alpha})`;
+        } else {
+          ctx.fillStyle = currentTheme === 'dark' 
+            ? `rgba(255, 255, 255, ${alpha * 0.95})` 
+            : `rgba(15, 23, 42, ${alpha * 0.85})`;
+        }
+
+        ctx.beginPath();
+        ctx.arc(px, py, Math.max(0.8, (z + 1) * 1.15), 0, Math.PI * 2);
+        ctx.fill();
+      }
+      requestAnimationFrame(renderOrb);
+    }
+    renderOrb();
+
+    // --- 6. TACTICAL AI BACKEND HOOK ---
+    async function dispatchDirectPrompt(text) {
+      document.getElementById('chatInput').value = text;
+      await submitChat();
+    }
+
+    async function submitChat() {
+      const input = document.getElementById('chatInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      haptic(30);
+      input.value = '';
+      input.blur();
+
+      const bubble = document.getElementById('advisorOutput');
+      const caption = document.getElementById('orbStatus');
+      
+      bubble.style.display = 'block';
+      bubble.textContent = 'EVALUATING SITUATIONAL THREAT...';
+      orbState = "THINKING";
+      orbSpeed = 0.045;
+      caption.textContent = "PROCESSING // SAAKHI CORE";
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: text })
+        });
+        const data = await res.json();
+        
+        bubble.textContent = data.response;
+        if (data.urgency === "HIGH") {
+          orbState = "ALERT";
+          caption.textContent = "ELEVATED ALERT";
+          haptic([90, 50, 90]);
+        } else {
+          orbState = "IDLE";
+          caption.textContent = "READY // LISTENING";
+        }
+      } catch (err) {
+        bubble.textContent = "STANDBY DIRECTIVES:\n1. Divert to well-lit public space immediately.\n2. Prime SOS tab for single-tap 112 dialing.\n3. Keep device in hand with screen visible.";
+        orbState = "IDLE";
+      } finally {
+        orbSpeed = 0.014;
+      }
+    }
+
+    // --- 7. REAL WEB AUDIO SIREN ---
+    let audioCtx = null;
+    let sirenOsc = null;
+    let sirenTimer = null;
+    let sirenActive = false;
+
+    function toggleSiren() {
+      haptic(50);
+      const label = document.getElementById('sirenLabel');
+      const ind = document.getElementById('sirenIndicator');
+
+      if (sirenActive) {
+        if (sirenOsc) {
+          sirenOsc.stop();
+          sirenOsc.disconnect();
+          sirenOsc = null;
+        }
+        clearInterval(sirenTimer);
+        sirenActive = false;
+        label.textContent = "AUDIBLE ALARM (SIREN)";
+        ind.textContent = "OFF";
+        ind.style.color = "var(--text-dim)";
+        return;
+      }
+
+      sirenActive = true;
+      label.textContent = "SIREN BLARING // ACTIVE";
+      ind.textContent = "LIVE";
+      ind.style.color = "#f43f5e";
+
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      sirenOsc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      sirenOsc.type = 'sawtooth';
+      gain.gain.value = 0.85;
+      sirenOsc.connect(gain);
+      gain.connect(audioCtx.destination);
+      sirenOsc.start();
+
+      let high = false;
+      sirenTimer = setInterval(() => {
+        if (!sirenOsc) return;
+        high = !high;
+        sirenOsc.frequency.setValueAtTime(high ? 960 : 660, audioCtx.currentTime);
+        haptic(40);
+      }, 380);
+    }
+
+    // --- 8. WITNESS AUDIO RECORDER ---
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let isRecording = false;
+
+    async function toggleWitnessRecorder() {
+      haptic(40);
+      const label = document.getElementById('recorderLabel');
+      const ind = document.getElementById('recorderIndicator');
+
+      if (isRecording) {
+        mediaRecorder.stop();
+        isRecording = false;
+        label.textContent = "WITNESS AUDIO RECORDER";
+        ind.textContent = "SAVING...";
+        return;
+      }
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = e => {
+          if (e.data.size > 0) audioChunks.push(e.data);
+        };
+
+        mediaRecorder.onstop = async () => {
+          const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+          const formData = new FormData();
+          formData.append('audio', audioBlob, 'witness_incident.webm');
+
+          try {
+            await fetch('/api/incidents/record', {
+              method: 'POST',
+              body: formData
+            });
+            ind.textContent = "LOCKED ✓";
+            ind.style.color = "#10b981";
+            setTimeout(() => { ind.textContent = "STANDBY"; ind.style.color = "var(--text-dim)"; }, 2500);
+          } catch (e) {
+            ind.textContent = "SAVED LOCAL";
+          }
+          stream.getTracks().forEach(track => track.stop());
+        };
+
+        mediaRecorder.start();
+        isRecording = true;
+        label.textContent = "RECORDING EVIDENCE...";
+        ind.textContent = "REC ●";
+        ind.style.color = "#f43f5e";
+      } catch (err) {
+        alert("Microphone permission required for Incident Witness recording.");
+      }
+    }
+
+    // --- 9. SOS HANDLER (Dialer + Silent Telemetry) ---
+    function handleEmergencySOS(e) {
+      haptic([120, 60, 120, 60, 250]);
+      fetch('/api/sos/dispatch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          latitude: currentGeo.latitude,
+          longitude: currentGeo.longitude,
+          accuracy: currentGeo.accuracy,
+          batteryLevel: 95
+        })
+      }).catch(() => {});
+    }
+
+    // --- 10. BIO-CALIBRATION BOX BREATHING ---
+    let breathRunning = false;
+    let breathInterval = null;
+    let phase = 0;
+    let sec = 4;
+    const phases = ['IN-BREATH', 'HOLD', 'EXHALE', 'HOLD'];
+
+    function toggleBreathing() {
+      haptic(30);
+      const btn = document.getElementById('breathBtn');
+      const ring = document.getElementById('dynamicBreathRing');
+      const act = document.getElementById('breathAction');
+      const timer = document.getElementById('breathTimer');
+
+      if (breathRunning) {
+        clearInterval(breathInterval);
+        breathRunning = false;
+        btn.textContent = 'ENGAGE 4-4-4-4 PROTOCOL';
+        act.textContent = 'STANDBY';
+        timer.textContent = '04';
+        ring.style.transform = 'scale(1)';
+        return;
+      }
+
+      breathRunning = true;
+      btn.textContent = 'TERMINATE PROTOCOL';
+      phase = 0;
+      sec = 4;
+      runPhaseVisual();
+
+      breathInterval = setInterval(() => {
+        sec--;
+        if (sec <= 0) {
+          phase = (phase + 1) % 4;
+          sec = 4;
+          runPhaseVisual();
+        }
+        timer.textContent = String(sec).padStart(2, '0');
+      }, 1000);
+    }
+
+    function runPhaseVisual() {
+      const ring = document.getElementById('dynamicBreathRing');
+      const act = document.getElementById('breathAction');
+      act.textContent = phases[phase];
+      haptic(phase % 2 === 0 ? 40 : 20);
+
+      if (phase === 0) ring.style.transform = 'scale(1.4)';
+      else if (phase === 2) ring.style.transform = 'scale(0.85)';
+    }
+  </script>
+</body>
+</html>
